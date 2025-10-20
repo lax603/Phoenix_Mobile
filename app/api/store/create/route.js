@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 import {getAuth} from "@clerk/nextjs/server";
+import { format } from "date-fns";
 import { NextResponse } from "next/server";
 // create a new store
 export async function POST(request) {
@@ -38,12 +39,59 @@ export async function POST(request) {
     if(isUsernameTaken){
         return NextResponse.json({error: "username is already taken"}, {status: 400});
     }
+
+    // image upload to imagekit
+    const buffer = Buffer.from(await image.arrayBuffer());
+    const response = await imagekit.upload({
+        file: buffer,
+        fileName: image.name,
+        folder: "logos",
+    })
+
+    const optimizedImage = imagekit.url({
+        path: response.filePath,
+        transformation: [
+            {quality: 'auto'},
+            {format: 'webp'},
+            {width: '512'}
+        ]
+            
+    })
+
+    const newStore = await prisma.store.create({
+        data: {
+            userId,
+            name,
+            username: username.toLowerCase(),
+            description,
+            email,
+            contact,
+            address,
+            image: optimizedImage,
+        }
+    })
+
+    // link store to user
+    await prisma.user.update({
+        where: {id: userId},
+        data: {store: {connect: {id: newStore.id}}}
+    })
+
+    return NextResponse.json({message: 'applied, waiting for approval'});
+
   
     } catch (error) {
+      console.error(error);
+      return NextResponse.json({error: error.code || error.message}, {status: 400});
 
   }
 
+
 }
+
+
+// check is user have already registered a store if yes then send status
+
 =======
 import {getAuth} from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";

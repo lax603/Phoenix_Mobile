@@ -58,6 +58,8 @@ export default function CreateStore() {
 
             const {data} = await axios.post('/api/store/create', formData, {headers: {Authorization: `Bearer ${token}`}})
             toast.success(data.message)
+
+            
         } catch (error) {
             toast.error(error?.response?.data?.error || error.message)
         }

@@ -6,7 +6,7 @@ export async function POST(request) {
   try {
     const {userId} = getAuth(request);
     // get the data from the from
-    const formatData = await request.formatData();
+    const formatData = await request.formtData();
 
     const name = formatData.get("name");
     const username = formatData.get("username");

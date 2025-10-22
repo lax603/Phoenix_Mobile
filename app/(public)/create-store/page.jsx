@@ -12,7 +12,6 @@ export default function CreateStore() {
 
     const {user} = useUser()
     const route = useRouter()
-    const {getToken} = useAuth()
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
     const [status, setStatus] = useState("")
     const [loading, setLoading] = useState(true)
@@ -34,9 +33,8 @@ export default function CreateStore() {
 
     const fetchSellerStatus = async () => {
         
-        const token = await getToken()
         try {
-            const {data} = await axios.get('/api/store/create',{headers: { Authorization: `Bearer ${token}`}})
+            const {data} = await axios.get('/api/store/create')
             
             if(['approved', 'rejected', 'pending'].includes(data.status)){
                 setStatus(data.status)
@@ -72,7 +70,7 @@ export default function CreateStore() {
             return toast('Please login to continue', {icon: '⚠️'})
         }
         try {
-            const token = await getToken()
+           
             const formData = new FormData()
             formData.append("name", storeInfo.name)
             formData.append("description", storeInfo.description)
@@ -82,11 +80,12 @@ export default function CreateStore() {
             formData.append("address", storeInfo.address)
             formData.append("image", storeInfo.image)
 
-            const {data} = await axios.post('/api/store/create', formData, {headers: { Authorization: `Bearer ${token}`}})
+            const {data} = await axios.post('/api/store/create', formData)
             toast.success(data.message)
             await fetchSellerStatus()
             
         } catch (error) {
+            console.log("Error details:", error.response?.data)
             toast.error(error?.response?.data?.error || error.message)
         }
 
@@ -110,7 +109,7 @@ export default function CreateStore() {
         <>
             {!alreadySubmitted ? (
                 <div className="mx-6 min-h-[70vh] my-16">
-                    <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Submitting data..." })} className="max-w-7xl mx-auto flex flex-col items-start gap-3 text-slate-500">
+                    <form onSubmit={async (e) => {e.preventDefault(); await toast.promise(onSubmitHandler(e),{loading: "Submitting data..."})}} className="max-w-7xl mx-auto flex flex-col items-start gap-3 text-slate-500">
                         {/* Title */}
                         <div>
                             <h1 className="text-3xl ">Add Your <span className="text-slate-800 font-medium">Store</span></h1>

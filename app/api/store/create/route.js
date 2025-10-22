@@ -1,20 +1,21 @@
-
+import imagekit from "@/configs/imageKit";
+import prisma from "@/lib/prisma";
 import {getAuth} from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 // create a new store
 export async function POST(request) {
   try {
     const {userId} = getAuth(request);
-    // get the data from the from
-    const formatData = await request.formtData();
+    // get the data from the form data
+    const formData = await request.formData();
 
-    const name = formatData.get("name");
-    const username = formatData.get("username");
-    const description = formatData.get("description");
-    const email = formatData.get("email");
-    const contact = formatData.get("contact");
-    const address = formatData.get("address");
-    const image = formatData.get("image");
+    const name = formData.get("name");
+    const username = formData.get("username");
+    const description = formData.get("description");
+    const email = formData.get("email");
+    const contact = formData.get("contact");
+    const address = formData.get("address");
+    const image = formData.get("image");
 
     if(!name || !username || !description || !email || !contact || !address || !image){
         return NextResponse.json({message: "missing store info"}, {status: 400});
@@ -44,7 +45,7 @@ export async function POST(request) {
     const response = await imagekit.upload({
         file: buffer,
         fileName: image.name,
-        folder: "logos",
+        folder: "logos"
     })
 
     const optimizedImage = imagekit.url({
@@ -66,7 +67,7 @@ export async function POST(request) {
             email,
             contact,
             address,
-            image: optimizedImage,
+            image: optimizedImage
         }
     })
 
@@ -105,7 +106,7 @@ export async function GET(request) {
         return NextResponse.json({status: store.status});
     }
 
-    return NextResponse.json({status: 'not_registered'});
+    return NextResponse.json({status: 'not registered'});
 
 
     } catch (error) {

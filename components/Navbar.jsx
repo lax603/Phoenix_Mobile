@@ -26,7 +26,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
                     <Link href="/" className="relative text-4xl font-semibold text-slate-700">
-                        <span className="text-[#E0724A]">S</span>ujani<span className="text-green-600 text-5xl leading-0"></span>
+                        <span className="text-[#E0724A]">P</span>hoenix<span className="text-green-600 text-5xl leading-0"></span>
                         <p className="absolute text-xs font-semibold -top-2 -right-10 px-3 p-0.5 rounded-full flex items-center gap-2 text-white bg-[#E0724A]">
                             Mobile
                         </p>

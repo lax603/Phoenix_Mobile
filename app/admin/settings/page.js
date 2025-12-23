@@ -6,6 +6,7 @@ const AdminSettingsPage = () => {
     const [navbarLogo, setNavbarLogo] = useState(null);
     const [navbarDisplayType, setNavbarDisplayType] = useState('image');
     const [navbarText, setNavbarText] = useState('');
+    const [navbarLogoSize, setNavbarLogoSize] = useState(40);
     const [heroImage, setHeroImage] = useState(null);
     const [heroTitle, setHeroTitle] = useState('');
     const [heroDescription, setHeroDescription] = useState('');
@@ -19,6 +20,7 @@ const AdminSettingsPage = () => {
             setCurrentSettings(data);
             setNavbarDisplayType(data.navbar.displayType || 'image');
             setNavbarText(data.navbar.text || '');
+            setNavbarLogoSize(data.navbar.logoSize || 40);
             setHeroTitle(data.hero.title);
             setHeroDescription(data.hero.description);
             setMenuItems(data.menu || []);
@@ -54,14 +56,14 @@ const AdminSettingsPage = () => {
         setMenuItems(newMenuItems);
     };
 
-    const deleteImage = async (imageUrl) => {
-        // You would typically make an API call to your backend to delete the image file from the server.
-        // For this example, we'll just clear the image URL from the settings.
-        if (imageUrl.includes('logo')) {
-            setCurrentSettings({ ...currentSettings, navbar: { ...currentSettings.navbar, logoUrl: '' } });
+    const deleteImage = async (imageType) => {
+        const newSettings = { ...currentSettings };
+        if (imageType === 'logo') {
+            newSettings.navbar.logoUrl = '';
         } else {
-            setCurrentSettings({ ...currentSettings, hero: { ...currentSettings.hero, imageUrl: '' } });
+            newSettings.hero.imageUrl = '';
         }
+        setCurrentSettings(newSettings);
     };
 
     const handleFormSubmit = async (e) => {
@@ -87,6 +89,7 @@ const AdminSettingsPage = () => {
                     displayType: navbarDisplayType,
                     text: navbarText,
                     logoUrl: navbarLogoUrl,
+                    logoSize: navbarLogoSize,
                 },
                 hero: {
                     imageUrl: heroImageUrl,
@@ -132,7 +135,7 @@ const AdminSettingsPage = () => {
                                 <label htmlFor="navbarLogo" className="block text-sm font-medium text-gray-700">Navbar Logo</label>
                                 {currentSettings.navbar?.logoUrl && (
                                     <div className="mt-2 flex items-center gap-4">
-                                        <img src={currentSettings.navbar.logoUrl} alt="Current Navbar Logo" className="h-10 w-auto" />
+                                        <img src={currentSettings.navbar.logoUrl} alt="Current Navbar Logo" style={{ height: `${navbarLogoSize}px` }} />
                                         <button type="button" onClick={() => deleteImage('logo')} className="text-red-500">Delete</button>
                                     </div>
                                 )}
@@ -142,6 +145,18 @@ const AdminSettingsPage = () => {
                                     onChange={(e) => setNavbarLogo(e.target.files[0])}
                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
                                 />
+                                <div>
+                                    <label htmlFor="logoSize" className="block text-sm font-medium text-gray-700">Logo Size</label>
+                                    <input
+                                        type="range"
+                                        id="logoSize"
+                                        min="20"
+                                        max="80"
+                                        value={navbarLogoSize}
+                                        onChange={(e) => setNavbarLogoSize(e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                </div>
                             </div>
                         ) : (
                             <div>

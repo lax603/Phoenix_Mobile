@@ -1,8 +1,9 @@
 {
   "navbar": {
-    "displayType": "image",
+    "displayType": "text",
     "text": "Phoenix Mobile",
-    "logoUrl": "/uploads/flag.png"
+    "logoUrl": "/defaults/default-logo.png",
+    "logoSize": 40
   },
   "hero": {
     "imageUrl": "/uploads/hero_model_img.png",

@@ -13,7 +13,7 @@ const Navbar = () => {
 
     const [search, setSearch] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
-    const [settings, setSettings] = useState({ navbar: { displayType: 'image', text: '' }, menu: [] });
+    const [settings, setSettings] = useState({ navbar: { displayType: 'image', text: '', logoSize: 40 }, menu: [] });
     const cartCount = useSelector(state => state.cart.total);
 
     useEffect(() => {
@@ -51,10 +51,10 @@ const Navbar = () => {
 
                     <Link href="/">
                         {settings.navbar.displayType === 'image' && settings.navbar.logoUrl ? (
-                            <img src={settings.navbar.logoUrl} alt="Phoenix Mobile Logo" className="h-10 w-auto" />
+                            <img src={settings.navbar.logoUrl} alt="Phoenix Mobile Logo" style={{ height: `${settings.navbar.logoSize}px` }} />
                         ) : (
                             <div className="relative text-4xl font-semibold text-slate-700">
-                                <span className="text-[#E0724A]">P</span>{settings.navbar.text || 'Phoenix'}<span className="text-green-600 text-5xl leading-0"></span>
+                                <span className="text-[#E0724A]">{settings.navbar.text?.charAt(0) || 'P'}</span>{settings.navbar.text?.slice(1) || 'hoenix'}<span className="text-green-600 text-5xl leading-0"></span>
                                 <p className="absolute text-xs font-semibold -top-2 -right-10 px-3 p-0.5 rounded-full flex items-center gap-2 text-white bg-[#E0724A]">
                                     Mobile
                                 </p>

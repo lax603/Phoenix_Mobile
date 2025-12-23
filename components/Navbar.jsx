@@ -2,7 +2,7 @@
 import { PackageIcon, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useUser , useClerk , UserButton } from "@clerk/nextjs";
 
@@ -13,7 +13,24 @@ const Navbar = () => {
     const router = useRouter();
 
     const [search, setSearch] = useState('')
+    const [isAdmin, setIsAdmin] = useState(false);
     const cartCount = useSelector(state => state.cart.total)
+
+    useEffect(() => {
+        const checkAdminStatus = async () => {
+          if (user) {
+            try {
+              const response = await fetch('/api/admin/is-admin', { cache: 'no-store' });
+              const data = await response.json();
+              setIsAdmin(data.isAdmin);
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+            }
+          }
+        };
+    
+        checkAdminStatus();
+      }, [user]);
 
     const handleSearch = (e) => {
         e.preventDefault()
@@ -38,6 +55,7 @@ const Navbar = () => {
                         <Link href="/shop">Shop</Link>
                         <Link href="/">About</Link>
                         <Link href="/">Contact</Link>
+                        {isAdmin && <Link href="/admin/dashboard">Admin</Link>}
 
                         <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 bg-slate-100 px-4 py-3 rounded-full">
                             <Search size={18} className="text-slate-600" />
@@ -57,6 +75,7 @@ const Navbar = () => {
                         ) : (
                             <UserButton>
                                 <UserButton.MenuItems>
+                                    {isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
                                     <UserButton.Action labelIcon={<PackageIcon size={16}/>} label="My Order" onClick={ ()=> router.push('/orders')}/>
                                 </UserButton.MenuItems>
                             </UserButton>
@@ -72,6 +91,7 @@ const Navbar = () => {
                                 <div>
                             <UserButton>
                                 <UserButton.MenuItems>
+                                    {isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
                                     <UserButton.Action labelIcon={<ShoppingCart size={16}/>} label="Cart" onClick={ ()=> router.push('/cart')}/>
                                      <UserButton.Action labelIcon={<PackageIcon size={16}/>} label="My Order" onClick={ ()=> router.push('/orders')}/>
                                 </UserButton.MenuItems>

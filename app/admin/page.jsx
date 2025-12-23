@@ -1,8 +1,8 @@
+
 'use client'
-import { dummyAdminDashboardData } from "@/assets/assets"
 import Loading from "@/components/Loading"
 import OrdersAreaChart from "@/components/OrdersAreaChart"
-import { CircleDollarSignIcon, ShoppingBasketIcon, StoreIcon, TagsIcon } from "lucide-react"
+import { CircleDollarSignIcon, ShoppingBasketIcon, StoreIcon, TagsIcon, UsersIcon, TicketIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function AdminDashboard() {
@@ -16,6 +16,8 @@ export default function AdminDashboard() {
         orders: 0,
         stores: 0,
         allOrders: [],
+        users: 0,
+        coupons: 0
     })
 
     const dashboardCardsData = [
@@ -23,11 +25,24 @@ export default function AdminDashboard() {
         { title: 'Total Revenue', value: currency + dashboardData.revenue, icon: CircleDollarSignIcon },
         { title: 'Total Orders', value: dashboardData.orders, icon: TagsIcon },
         { title: 'Total Stores', value: dashboardData.stores, icon: StoreIcon },
+        { title: 'Total Users', value: dashboardData.users, icon: UsersIcon },
+        { title: 'Total Coupons', value: dashboardData.coupons, icon: TicketIcon },
     ]
 
     const fetchDashboardData = async () => {
-        setDashboardData(dummyAdminDashboardData)
-        setLoading(false)
+        try {
+            setLoading(true)
+            const res = await fetch('/api/admin/dashboard');
+            const data = await res.json();
+            if (data.error) {
+                return;
+            }
+            setDashboardData(prev => ({...prev, ...data}));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     useEffect(() => {

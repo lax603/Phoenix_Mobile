@@ -12,6 +12,10 @@ export async function GET(request) {
         const {userId} = getAuth(request);
         const storeId = await authSeller(userId);
 
+        if (!storeId) {
+            return NextResponse.json({ error: "You are not an authorized seller." }, { status: 401 });
+        }
+
         // get all orders for the seller
         const orders = await prisma.order.findMany({where: {storeId}})
 
@@ -19,22 +23,10 @@ export async function GET(request) {
         const products = await prisma.product.findMany({where: {storeId}})
 
 
-        const ratings = await prisma.rating.findMany({
-            where: {productId: {in: products.map(product => product.id)}},
-            include: {user: true, product: true}
-        })
-
-        const dashboardData = {
-            ratings,
-            totalOrders: orders.length,
-            totalEarnings: Math.round(orders.reduce((acc, order) => acc + order.totalAmount, 0)),
-            totalProducts: products.length,
-        }
-
-        return NextResponse.json({dashboardData});
+        return NextResponse.json({orders, products});
 
     } catch (error) {
        console.error(error);
-       return NextResponse.json({error: error.code || error.message}, {status: 400});
+       return NextResponse.json({error: error.message || "An error occurred"}, {status: 500});
     }
 }

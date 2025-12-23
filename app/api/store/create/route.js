@@ -1,7 +1,14 @@
+
 import { auth, currentUser } from "@clerk/nextjs/server";
-import imagekit from "@/configs/imageKit";
+import ImageKit from "imagekit";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+
+const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
 
 // Create a new store
 export async function POST(request) {
@@ -73,7 +80,10 @@ export async function POST(request) {
     });
 
     if (existingStore) {
-      return NextResponse.json({ status: existingStore.status });
+      return NextResponse.json(
+        { error: "You can only create one store per account." },
+        { status: 409 }
+      );
     }
 
     // Check if username is already taken

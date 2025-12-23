@@ -1,26 +1,28 @@
 
-import { writeFile } from 'fs/promises';
-import { NextResponse } from 'next/server';
-import path from 'path';
+import { NextResponse } from "next/server";
+import imagekit from "@/configs/imageKit";
 
-export async function POST(req) {
-    const formData = await req.formData();
-    const file = formData.get('file');
+export async function POST(request) {
+    try {
+        const formData = await request.formData();
+        const file = formData.get("file");
 
-    if (!file) {
-        return new NextResponse(JSON.stringify({ error: "No file uploaded." }), { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: "No file provided" }, { status: 400 });
+        }
+
+        const fileBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(fileBuffer);
+
+        const response = await imagekit.upload({
+            file: buffer,
+            fileName: file.name,
+        });
+
+        return NextResponse.json({ url: response.url });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: error.message || "An error occurred" }, { status: 500 });
     }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // The name of the file will be preserved
-    const filePath = path.join(process.cwd(), 'public/uploads', file.name);
-    await writeFile(filePath, buffer);
-
-    const fileUrl = `/uploads/${file.name}`;
-
-    return new NextResponse(JSON.stringify({ url: fileUrl }), {
-        headers: { 'Content-Type': 'application/json' },
-    });
 }

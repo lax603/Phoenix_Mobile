@@ -1,12 +1,14 @@
 'use client'
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, Upload } from "lucide-react"
+import Loading from "@/components/Loading"
 
-export default function AddProductPage() {
+export default function EditProductPage() {
 
     const router = useRouter()
+    const { id } = useParams()
 
     const [formData, setFormData] = useState({
         name: "",
@@ -15,8 +17,20 @@ export default function AddProductPage() {
         price: "",
         images: [],
     })
-
+    const [loading, setLoading] = useState(true)
     const [imagePreviews, setImagePreviews] = useState([])
+
+    useEffect(() => {
+        if (id) {
+            fetch(`/api/store/product/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    setFormData(data)
+                    setImagePreviews(data.images)
+                    setLoading(false)
+                })
+        }
+    }, [id])
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -34,50 +48,31 @@ export default function AddProductPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const uploadPromises = formData.images.map(image => {
-            const imageFormData = new FormData();
-            imageFormData.append('file', image);
-
-            return fetch('/api/upload', {
-                method: 'POST',
-                body: imageFormData,
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error('Image upload failed');
-                }
-                return response.json();
-            });
+        const apiPromise = fetch(`/api/store/product/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update product');
+            }
+            return response.json();
+        })
+        .then(() => {
+            router.push("/store/manage-product")
         });
 
-        const uploadPromise = Promise.all(uploadPromises)
-            .then(imageResponses => {
-                const imageUrls = imageResponses.map(res => res.url);
-                const productData = { ...formData, images: imageUrls };
-
-                return fetch('/api/store/product', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(productData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to add product');
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    router.push("/store/manage-product")
-                });
-            });
-
-        toast.promise(uploadPromise, {
-            loading: 'Adding product...',
-            success: 'Product added successfully!',
-            error: 'Failed to add product'
+        toast.promise(apiPromise, {
+            loading: 'Updating product...',
+            success: 'Product updated successfully!',
+            error: 'Failed to update product'
         });
     }
+
+    if (loading) return <Loading />
 
     return (
         <>
@@ -85,7 +80,7 @@ export default function AddProductPage() {
                 <button onClick={() => router.back()} className="mr-2">
                     <ArrowLeft className="text-slate-600" />
                 </button>
-                <h1 className="text-2xl text-slate-500">Add a New <span className="text-slate-800 font-medium">Product</span></h1>
+                <h1 className="text-2xl text-slate-500">Edit <span className="text-slate-800 font-medium">Product</span></h1>
             </div>
 
             <form onSubmit={handleSubmit} className="max-w-2xl">
@@ -132,7 +127,7 @@ export default function AddProductPage() {
                     </div>
                 )}
 
-                <button type="submit" className="w-full bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700">Add Product</button>
+                <button type="submit" className="w-full bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700">Update Product</button>
 
             </form>
         </>

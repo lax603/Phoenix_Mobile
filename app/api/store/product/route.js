@@ -1,91 +1,64 @@
-import imagekit from "@/configs/imageKit";
+
 import prisma from "@/lib/prisma";
 import authSeller from "@/middlewares/authSeller";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// add a new product
-export async function POST(request) {
+// Get all products for a store
+export async function GET(request) {
     try {
-        const {userId} = getAuth(request);
-        const storeId = await authSeller(userId)
+        const { userId } = getAuth(request);
+        const storeId = await authSeller(userId);
 
-        if (!storeId){
-            return NextResponse.json({error: 'not authorized'}, {status: 401
-            })
+        if (!storeId) {
+            return NextResponse.json({ error: "You are not an authorized seller." }, { status: 401 });
         }
 
-        // get the data from the from
-        
-        const formData = await request.formData();
-        const name = formData.get('name');
-        const description = formData.get('description');
-        const mrp = Number(formData.get('mrp')) ;
-        const price = Number(formData.get('price'));
-        const category = formData.get('category');
-        const images = formData.getAll('images');
+        const products = await prisma.product.findMany({
+            where: { storeId },
+        });
 
-        if (!name || !description || !mrp || !price || !category || images.length > 1){
-            return NextResponse.json({error: 'missing product details'}, {status: 400})
-        }
-
-
-        // upload images to imagekit
-        const imageUrl = await Promise.all(images.map(async (image) => {
-            const buffer = Buffer.from(await image.arrayBuffer());
-            const response = await imagekit.upload({
-                file: buffer,
-                fileName: image.name,
-                folder: 'products',
-            })
-            const url = imagekit.url({
-                path: response.filePath,
-                transformation: [
-                    {quality: "auto"},
-                    {format: "webp"},
-                    {width: "1024"}
-                ]
-            })
-            return url;
-        }))
-
-        await prisma.product.create({
-            data: {
-                name,
-                description,
-                mrp,
-                price,
-                category,
-                images: imageUrl,
-                storeId,
-            }
-        })
-
-        return NextResponse.json({message: 'product added successfully'})
+        return NextResponse.json(products);
 
     } catch (error) {
         console.error(error);
-        return NextResponse.json({error: error.code || error.message }, {status: 400})
+        return NextResponse.json({ error: error.message || "An error occurred" }, { status: 500 });
     }
 }
 
-// det all products for a seller
-export async function GET(request) {
-    try {
-        const {userId} = getAuth(request);
-        const storeId = await authSeller(userId)
 
-        if (!storeId){
-            return NextResponse.json({error: 'not authorized'}, {status: 401
-            })
+// Add a new product
+export async function POST(request) {
+    try {
+        const { userId } = getAuth(request);
+        const storeId = await authSeller(userId);
+
+        if (!storeId) {
+            return NextResponse.json({ error: "You are not an authorized seller." }, { status: 401 });
         }
 
-        const products = await prisma.product.findMany({ where: {storeId}});
+        const body = await request.json();
+        const { name, description, mrp, price, images } = body;
 
-        return NextResponse.json({products});
-        
+        if (!name || !description || !mrp || !price) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        const product = await prisma.product.create({
+            data: {
+                name,
+                description,
+                mrp: parseFloat(mrp),
+                price: parseFloat(price),
+                images: images, // Updated to use the images array from the request
+                storeId: storeId
+            }
+        });
+
+        return NextResponse.json(product);
+
     } catch (error) {
         console.error(error);
-        return NextResponse.json({error: error.code || error.message }, {status: 400})
+        return NextResponse.json({ error: error.message || "An error occurred" }, { status: 500 });
     }
 }

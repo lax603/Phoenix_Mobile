@@ -2,6 +2,7 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import Navbar from '../components/Navbar';
+import ToastProvider from '@/components/ToastProvider';
 
 export const metadata = {
   title: 'Next.js Admin Dashboard',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en">
         <body>
+          <ToastProvider />
           <Navbar />
           {children}
         </body>

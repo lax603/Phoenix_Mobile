@@ -1,9 +1,11 @@
+
 'use client'
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"
+import Link from "next/link"
 import Loading from "@/components/Loading"
-import { productDummyData } from "@/assets/assets"
+import { PlusCircle, Edit, Trash2 } from "lucide-react"
 
 export default function StoreManageProducts() {
 
@@ -13,32 +15,93 @@ export default function StoreManageProducts() {
     const [products, setProducts] = useState([])
 
     const fetchProducts = async () => {
-        setProducts(productDummyData)
-        setLoading(false)
+        setLoading(true);
+        try {
+            const response = await fetch('/api/store/product');
+            const data = await response.json();
+            if (response.ok) {
+                setProducts(Array.isArray(data) ? data : []);
+            } else {
+                toast.error(data.error || "Failed to fetch products");
+                setProducts([]);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch products");
+            setProducts([]);
+        }
+        setLoading(false);
     }
 
     const toggleStock = async (productId) => {
-        // Logic to toggle the stock of a product
+        const product = products.find(p => p.id === productId);
+        const apiPromise = fetch(`/api/store/product/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ...product, inStock: !product.inStock })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update stock');
+            }
+            return response.json();
+        })
+        .then(() => {
+            fetchProducts();
+        });
 
+        toast.promise(apiPromise, {
+            loading: 'Updating stock...',
+            success: 'Stock updated successfully!',
+            error: 'Failed to update stock'
+        });
+    }
 
+    const deleteProduct = async (productId) => {
+        const apiPromise = fetch(`/api/store/product/${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete product');
+            }
+            return response.json();
+        })
+        .then(() => {
+            fetchProducts();
+        });
+
+        toast.promise(apiPromise, {
+            loading: 'Deleting product...',
+            success: 'Product deleted successfully!',
+            error: 'Failed to delete product'
+        });
     }
 
     useEffect(() => {
-            fetchProducts()
+        fetchProducts()
     }, [])
 
     if (loading) return <Loading />
 
     return (
         <>
-            <h1 className="text-2xl text-slate-500 mb-5">Manage <span className="text-slate-800 font-medium">Products</span></h1>
-            <table className="w-full max-w-4xl text-left  ring ring-slate-200  rounded overflow-hidden text-sm">
+            <div className="flex justify-between items-center mb-5">
+                <h1 className="text-2xl text-slate-500">Manage <span className="text-slate-800 font-medium">Products</span></h1>
+                <Link href="/store/add-product" className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700">
+                    <PlusCircle size={20} />
+                    Add Product
+                </Link>
+            </div>
+            <table className="w-full max-w-4xl text-left ring ring-slate-200 rounded overflow-hidden text-sm">
                 <thead className="bg-slate-50 text-gray-700 uppercase tracking-wider">
                     <tr>
                         <th className="px-4 py-3">Name</th>
                         <th className="px-4 py-3 hidden md:table-cell">Description</th>
                         <th className="px-4 py-3 hidden md:table-cell">MRP</th>
                         <th className="px-4 py-3">Price</th>
+                        <th className="px-4 py-3">Stock</th>
                         <th className="px-4 py-3">Actions</th>
                     </tr>
                 </thead>
@@ -56,10 +119,20 @@ export default function StoreManageProducts() {
                             <td className="px-4 py-3">{currency} {product.price.toLocaleString()}</td>
                             <td className="px-4 py-3 text-center">
                                 <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                                    <input type="checkbox" className="sr-only peer" onChange={() => toast.promise(toggleStock(product.id), { loading: "Updating data..." })} checked={product.inStock} />
+                                    <input type="checkbox" className="sr-only peer" onChange={() => toggleStock(product.id)} checked={product.inStock} />
                                     <div className="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
                                     <span className="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4"></span>
                                 </label>
+                            </td>
+                            <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    <Link href={`/store/edit-product/${product.id}`}>
+                                        <Edit size={18} className="text-slate-600 hover:text-slate-800" />
+                                    </Link>
+                                    <button onClick={() => deleteProduct(product.id)}>
+                                        <Trash2 size={18} className="text-red-500 hover:text-red-700" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}

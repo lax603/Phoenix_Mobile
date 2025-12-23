@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useUser , useClerk , UserButton } from "@clerk/nextjs";
+import { useUser , useClerk , UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 const Navbar = () => {
     const { user } = useUser();
@@ -15,6 +15,11 @@ const Navbar = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [settings, setSettings] = useState({ navbar: { displayType: 'image', text: '', logoSize: 40 }, menu: [] });
     const cartCount = useSelector(state => state.cart.total);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -36,8 +41,10 @@ const Navbar = () => {
             }
         };
 
-        checkAdminStatus();
-    }, [user]);
+        if (isClient) {
+            checkAdminStatus();
+        }
+    }, [user, isClient]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -67,7 +74,7 @@ const Navbar = () => {
                         {settings.menu && settings.menu.map((item, index) => (
                             <Link key={index} href={item.href}>{item.name}</Link>
                         ))}
-                        {isAdmin && <Link href="/admin/dashboard">Admin</Link>}
+                        {isClient && isAdmin && <Link href="/admin/dashboard">Admin</Link>}
 
                         <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 bg-slate-100 px-4 py-3 rounded-full">
                             <Search size={18} className="text-slate-600" />
@@ -77,43 +84,42 @@ const Navbar = () => {
                         <Link href="/cart" className="relative flex items-center gap-2 text-slate-600">
                             <ShoppingCart size={18} />
                             Cart
-                            <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
+                            {isClient && <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>}
                         </Link>
-                        {
-                            !user ? (
-                                <button onClick={openSignIn} className="px-8 py-2 bg-[#E0724A] hover:bg-[#c84c1f] transition text-white rounded-full">
-                                    Login
-                                </button>
-                            ) : (
-                                <UserButton>
-                                    <UserButton.MenuItems>
-                                        {isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
-                                        <UserButton.Action labelIcon={<PackageIcon size={16} />} label="My Order" onClick={() => router.push('/orders')} />
-                                    </UserButton.MenuItems>
-                                </UserButton>
-                            )
-                        }
+                        
+                        <SignedOut>
+                            <button onClick={() => openSignIn()} className="px-8 py-2 bg-[#E0724A] hover:bg-[#c84c1f] transition text-white rounded-full">
+                                Login
+                            </button>
+                        </SignedOut>
+                        <SignedIn>
+                            <UserButton>
+                                <UserButton.MenuItems>
+                                    {isClient && isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
+                                    <UserButton.Action labelIcon={<PackageIcon size={16} />} label="My Order" onClick={() => router.push('/orders')} />
+                                </UserButton.MenuItems>
+                            </UserButton>
+                        </SignedIn>
                     </div>
 
                     {/* Mobile User Button */}
                     <div className="sm:hidden">
-                        {
-                            user ? (
-                                <div>
-                                    <UserButton>
-                                        <UserButton.MenuItems>
-                                            {isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
-                                            <UserButton.Action labelIcon={<ShoppingCart size={16} />} label="Cart" onClick={() => router.push('/cart')} />
-                                            <UserButton.Action labelIcon={<PackageIcon size={16} />} label="My Order" onClick={() => router.push('/orders')} />
-                                        </UserButton.MenuItems>
-                                    </UserButton>
-                                </div>
-                            ) : (
-                                <button onClick={openSignIn} className="px-7 py-1.5 bg-[#E0724A] hover:bg-[#c84c1f] text-sm transition text-white rounded-full">
-                                    Login
-                                </button>
-                            )
-                        }
+                        <SignedOut>
+                             <button onClick={() => openSignIn()} className="px-7 py-1.5 bg-[#E0724A] hover:bg-[#c84c1f] text-sm transition text-white rounded-full">
+                                Login
+                            </button>
+                        </SignedOut>
+                        <SignedIn>
+                            <div>
+                                <UserButton>
+                                    <UserButton.MenuItems>
+                                        {isClient && isAdmin && <UserButton.Action label="Admin Dashboard" onClick={() => router.push('/admin/dashboard')} />}
+                                        <UserButton.Action labelIcon={<ShoppingCart size={16} />} label="Cart" onClick={() => router.push('/cart')} />
+                                        <UserButton.Action labelIcon={<PackageIcon size={16} />} label="My Order" onClick={() => router.push('/orders')} />
+                                    </UserButton.MenuItems>
+                                </UserButton>
+                            </div>
+                        </SignedIn>
                     </div>
                 </div>
             </div>

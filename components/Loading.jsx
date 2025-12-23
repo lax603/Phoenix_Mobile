@@ -1,12 +1,7 @@
-'use client'
-
-const Loading = () => {
-
+export default function Loading() {
     return (
-        <div className='flex items-center justify-center h-screen'>
-            <div className='w-11 h-11 rounded-full border-3 border-gray-300 border-t-[#E0724A] animate-spin'></div>
+        <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-slate-800"></div>
         </div>
     )
 }
-
-export default Loading
